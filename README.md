@@ -1,2 +1,2 @@
 # aws-aurora-postgresql-poc
-POC provision to AWS Aurora Postgresql 
+POC to provision to AWS Aurora Postgresql 
