@@ -30,7 +30,8 @@ resource "null_resource" "wait_for_db_create" {
 
 resource "aws_vpc" "aurora_db_vpc" {
   cidr_block = local.rds_vpc_cidr
-
+  enable_dns_support   = true
+  enable_dns_hostnames = true
   tags = {
     Name = "aurora_db_vpc"
   }
@@ -82,12 +83,18 @@ resource "aws_lb_target_group" "aurora-example-postgresql-lb-tg" {
   protocol    = "TCP"
   target_type = "ip"
   vpc_id      = "${aws_vpc.aurora_db_vpc.id}"
+  depends_on = [
+    data.dns_a_record_set.aurora_potsgresql-ip
+  ]
 }
 
 resource "aws_lb_target_group_attachment" "aurora-example-postgresql-lb-tg-attach" {
   target_group_arn = "${aws_lb_target_group.aurora-example-postgresql-lb-tg.arn}"
   target_id        = "${data.dns_a_record_set.aurora_potsgresql-ip.addrs[0]}"
   port             = "${module.aurora.this_rds_cluster_port}"
+  depends_on = [
+    data.dns_a_record_set.aurora_potsgresql-ip
+  ]
 }
 
 
@@ -99,6 +106,9 @@ resource "aws_lb_listener" "aurora-example-postgresql-lb_listener" {
     type             = "forward"
     target_group_arn = "${aws_lb_target_group.aurora-example-postgresql-lb-tg.arn}"
   }
+  depends_on = [
+    data.dns_a_record_set.aurora_potsgresql-ip
+  ]
 }
 
 //RDS Aurora module

@@ -3,7 +3,7 @@ locals {
     postgres_secret   = {
         engine   = "postgres"
         dbname   = "postgres"
-        host     = "${aws_vpc_endpoint.postgres_endpoint.dns_entry[0].dns_name}"
+        host     = "${data.dns_a_record_set.aurora_potsgresql-ip.addrs[0]}"
         username = "${module.aurora.this_rds_cluster_master_username}"
         password = "${module.aurora.this_rds_cluster_master_password}"
         port     = "${module.aurora.this_rds_cluster_port}"
@@ -13,7 +13,7 @@ locals {
     user1_secret   = {
         engine   = "postgres"
         dbname   = "postgres"
-        host     = "${aws_vpc_endpoint.postgres_endpoint.dns_entry[0].dns_name}"
+        host     = "${data.dns_a_record_set.aurora_potsgresql-ip.addrs[0]}"
         username = "user1"
         password = "user1"
         port     = "5432"

@@ -4,7 +4,7 @@
 import boto3
 import json
 import logging
-import os
+#import os
 import psycopg2
 
 logger = logging.getLogger()
@@ -49,8 +49,14 @@ def lambda_handler(event, context):
     token = event['ClientRequestToken']
     step = event['Step']
 
-    # Setup the client
-    service_client = boto3.client('secretsmanager', endpoint_url=os.environ['SECRETS_MANAGER_ENDPOINT'])
+    # Create a Secrets Manager client
+    region_name = "us-east-2"
+    session = boto3.session.Session()
+    service_client = session.client(
+        service_name='secretsmanager',
+        region_name=region_name
+    )
+    #service_client = boto3.client('secretsmanager', endpoint_url=os.environ['SECRETS_MANAGER_ENDPOINT'])
 
     # Make sure the version is staged correctly
     metadata = service_client.describe_secret(SecretId=arn)
@@ -330,3 +336,4 @@ def get_secret_dict(service_client, arn, stage, token=None):
 
     # Parse and return the secret JSON string
     return secret_dict
+

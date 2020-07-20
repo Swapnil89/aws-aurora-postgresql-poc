@@ -13,13 +13,21 @@ logger.setLevel(logging.INFO)
 
 def lambda_handler(event, context):
     logger.info("Starting Lambda Handler")
-    master_secret_arn = os.environ['MASTER_SECRET_NAME']
-    user_secret_arn   = event['UserSecretName']  
+    #master_secret_arn = os.environ['MASTER_SECRET_NAME']
+    user_secret_arn   = event['UserSecretName']
+    master_secret_arn   = event['MasterSecretName']
     step       = event['Step']
 
     logger.info("Connecting to Secret Manager...")
-    # Setup the client
-    service_client = boto3.client('secretsmanager', endpoint_url=os.environ['SECRETS_MANAGER_ENDPOINT'])
+
+    # Create a Secrets Manager client
+    region_name = "us-east-2"
+    session = boto3.session.Session()
+    service_client = session.client(
+        service_name='secretsmanager',
+        region_name=region_name
+    )
+    #service_client = boto3.client('secretsmanager', endpoint_url=os.environ['SECRETS_MANAGER_ENDPOINT'])
     
     #Get sec
     master_secret = get_secret_dict(service_client, master_secret_arn)

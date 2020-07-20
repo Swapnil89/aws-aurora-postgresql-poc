@@ -1,12 +1,40 @@
 //Locals
 locals {
   zip_file = "src/lambda.zip"
-  lambda_subnets         = [ "${aws_subnet.public_aurora_subnet.id}" ]
-  lambda_security_groups = [ "${aws_security_group.secret_manager_endpoint_sg.id}", "${aws_security_group.postgres_endpoint_sg.id}" ]
+  lambda_vpc_id          = "${aws_vpc.aurora_db_vpc.id}"
+  lambda_vpc_cidr        = "${aws_vpc.aurora_db_vpc.cidr_block}"
+  lambda_subnets         = [ "${aws_subnet.aurora_db_subnet_2a.id}", "${aws_subnet.aurora_db_subnet_2b.id}" ]
   master_secret_name     = "${aws_secretsmanager_secret.postgres_secret.name}"
 }
 
 //Resource
+
+resource "aws_security_group" "allow_tls" {
+  name        = "allow_tls"
+  description = "Allow TLS inbound traffic"
+  vpc_id      = local.lambda_vpc_id
+
+  ingress {
+    description = "TLS from VPC"
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = [ local.lambda_vpc_cidr ]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "allow_tls"
+  }
+}
+
+
 resource "aws_lambda_permission" "allow_secret_manager_invoke_secret_rotation" {
    statement_id  = "AllowSecretManagerInvoke"
    action        = "lambda:InvokeFunction"
@@ -58,7 +86,7 @@ resource "aws_lambda_function" "rotation_lambda" {
   
   vpc_config {
     subnet_ids         = local.lambda_subnets
-    security_group_ids = local.lambda_security_groups
+    security_group_ids = [ "${aws_security_group.allow_tls.id}" ]
   }
     
   environment {
@@ -120,7 +148,7 @@ resource "aws_lambda_function" "manage_users_lambda" {
   
   vpc_config {
     subnet_ids         = local.lambda_subnets
-    security_group_ids = local.lambda_security_groups
+    security_group_ids = [ "${aws_security_group.allow_tls.id}" ]
   }
     
   environment {

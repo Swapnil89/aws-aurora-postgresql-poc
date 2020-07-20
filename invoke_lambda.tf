@@ -1,5 +1,6 @@
 locals {
   input_event = {
+    MasterSecretName = "${aws_secretsmanager_secret.postgres_secret.name}"
     UserSecretName = "${aws_secretsmanager_secret.user1_secret.name}"
     Step = "CreateUser"
   }
